@@ -7,10 +7,11 @@ const HEADER_SIZE = 15; // 8 (hash) + 4 (SN) + 2 (Flags/Seq) + 1 (MsgType)
  * Starts the UDP server to listen for incoming NB-IoT messages.
  * @param {number} port - The port to listen on.
  * @param {string} host - The address to bind to (e.g., '0.0.0.0' or '127.0.0.1').
+ * @param {object} config - The initialized config instance.
  * @param {function} onMessage - Callback function to handle incoming messages.
  * @returns {dgram.Socket} The UDP server instance.
  */
-export default function UDPServer(port, host, onMessage) {
+export default function UDPServer(port, host, config, onMessage) {
     const server = dgram.createSocket('udp4');
 
     server.on('error', (err) => {
@@ -37,10 +38,13 @@ export default function UDPServer(port, host, onMessage) {
             const messageType = msg.readUInt8(14);
             const raw = msg.slice(HEADER_SIZE); // The CBOR payload
 
-            // 2. Fetch the claim token for this specific device (Mocked for now)
-            // TODO: Replace this with your actual database lookup (e.g., await db.getClaimToken(serialNumber))
-            const claimTokenHex = "86ccef19c527194f67008a5c24579115";
-            const claimToken = Buffer.from(claimTokenHex, 'hex');
+            // 2. Fetch the claim token for this specific device
+            const device = config.getDevice(serialNumber);
+            if (!device) {
+                throw new Error(`Device with SN ${serialNumber} not found in devices.json!`);
+            }
+            
+            const claimToken = Buffer.from(device.claimToken, 'hex');
 
             // 3. Verify the Security Signature (SHA-256 XOR truncated)
             const sha256 = crypto.createHash('sha256');
@@ -65,10 +69,10 @@ export default function UDPServer(port, host, onMessage) {
             const decodedData = {
                 time: Math.floor((new Date().getTime()) / 1000),
                 port: port,
-                serial_number: serialNumber,
+                serialNumber: serialNumber,
                 flags: flags,
                 sequence: sequence,
-                message_type: messageType,
+                messageType: messageType,
                 raw,
             };
 
