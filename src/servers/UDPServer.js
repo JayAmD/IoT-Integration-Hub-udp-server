@@ -1,4 +1,7 @@
 import dgram from 'dgram';
+import crypto from 'crypto';
+
+const HEADER_SIZE = 15; // 8 (hash) + 4 (SN) + 2 (Flags/Seq) + 1 (MsgType)
 
 /**
  * Starts the UDP server to listen for incoming NB-IoT messages.
@@ -15,11 +18,65 @@ export default function UDPServer(port, host, onMessage) {
         server.close();
     });
 
-    server.on('message', (msg, rinfo) => {
-        console.log(`[UDP] Received raw message from ${rinfo.address}:${rinfo.port}`);
+    server.on('message', async (msg, rinfo) => {
+        console.log(`[UDP] Received from: ${rinfo.address}:${rinfo.port} l: ${msg.length} data: ${msg.toString('hex')}`);
 
-        if (onMessage) {
-            onMessage(msg, rinfo);
+        try {
+            if (msg.length < HEADER_SIZE) {
+                throw new Error('Message too short to contain the Hardwario header');
+            }
+
+            // 1. Extract the 15-byte header components
+            const receivedHash = msg.slice(0, 8);
+            const serialNumber = msg.readUInt32BE(8); // Hardwario uses Big-Endian
+
+            const flagsAndSeq = msg.readUInt16BE(12);
+            const flags = (flagsAndSeq >> 12) & 0x0F;
+            const sequence = flagsAndSeq & 0x0FFF;
+
+            const messageType = msg.readUInt8(14);
+            const raw = msg.slice(HEADER_SIZE); // The CBOR payload
+
+            // 2. Fetch the claim token for this specific device (Mocked for now)
+            // TODO: Replace this with your actual database lookup (e.g., await db.getClaimToken(serialNumber))
+            const claimTokenHex = "86ccef19c527194f67008a5c24579115";
+            const claimToken = Buffer.from(claimTokenHex, 'hex');
+
+            // 3. Verify the Security Signature (SHA-256 XOR truncated)
+            const sha256 = crypto.createHash('sha256');
+            sha256.update(claimToken);
+            sha256.update(msg.slice(8)); // Hash everything after the 8-byte hash field
+            const fullDigest = sha256.digest();
+
+            // Replicate the device's XOR truncation logic
+            const calculatedHash = Buffer.alloc(8);
+            for (let i = 0; i < 8; i++) {
+                calculatedHash[i] = fullDigest[i] ^ fullDigest[8 + i] ^ fullDigest[16 + i] ^ fullDigest[24 + i];
+            }
+
+            if (Buffer.compare(receivedHash, calculatedHash) !== 0) {
+                throw new Error('Security signature hash does not match!');
+                console.warn(`[UDP] Hash mismatch for SN: ${serialNumber} (Expected if using dummy claim token)`);
+            }
+
+            // 4. Optionally switch by message type (0x06 is UL_UPLOAD_DATA)
+
+
+            const decodedData = {
+                time: Math.floor((new Date().getTime()) / 1000),
+                port: port,
+                serial_number: serialNumber,
+                flags: flags,
+                sequence: sequence,
+                message_type: messageType,
+                raw,
+            };
+
+            if (onMessage) {
+                onMessage(decodedData, rinfo);
+            }
+        } catch (error) {
+            console.warn('[UDP] Server parse error: %s', error.message);
         }
     });
 
