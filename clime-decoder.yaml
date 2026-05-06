@@ -1,0 +1,447 @@
+version: 2
+type: decoder
+name: com.hardwario.chester.app.clime
+schema:
+  - message:
+      - version:
+      - sequence:
+      - timestamp:
+  - system:
+      - uptime:
+      - voltage_load:
+          - $div: 1000
+          - $fpp: 2
+      - voltage_rest:
+          - $div: 1000
+          - $fpp: 2
+      - current_load:
+  - network:
+      - parameter:
+          - eest:
+          - ecl:
+          - rsrp:
+          - rsrq:
+          - snr:
+          - plmn:
+          - cid:
+          - band:
+          - earfcn:
+  - thermometer:
+      - temperature:
+          - $div: 100
+          - $fpp: 2
+  - accelerometer:
+      - accel_x:
+          - $div: 1000
+          - $fpp: 2
+      - accel_y:
+          - $div: 1000
+          - $fpp: 2
+      - accel_z:
+          - $div: 1000
+          - $fpp: 2
+      - orientation:
+  - iaq_sensor:
+      - temperature:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - humidity:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - illuminance:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+      - altitude:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+      - pressure:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+      - co2_conc:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+      - motion_count:
+          - measurements:
+              - $tsp:
+                  - value:
+      - press_count:
+          - measurements:
+              - $tsp:
+                  - value:
+  - w1_thermometers:
+      - serial_number:
+      - measurements:
+          - $tsp:
+              - min:
+                  - $div: 100
+                  - $fpp: 2
+              - max:
+                  - $div: 100
+                  - $fpp: 2
+              - avg:
+                  - $div: 100
+                  - $fpp: 2
+              - mdn:
+                  - $div: 100
+                  - $fpp: 2
+  - hygrometer:
+      - temperature:
+          - events:
+              - $tso:
+                  - type:
+                      - $enum:
+                          - "alarm_hi_activated"
+                          - "alarm_hi_deactivated"
+                          - "alarm_lo_activated"
+                          - "alarm_lo_deactivated"
+                  - value:
+                      - $div: 100
+                      - $fpp: 2
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - humidity:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+  - rtd_thermometer:
+      - channel:
+      - measurements:
+          - $tsp:
+              - min:
+                  - $div: 100
+                  - $fpp: 2
+              - max:
+                  - $div: 100
+                  - $fpp: 2
+              - avg:
+                  - $div: 100
+                  - $fpp: 2
+              - mdn:
+                  - $div: 100
+                  - $fpp: 2
+  - soil_sensors:
+      - serial_number:
+      - temperature:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - moisture:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+  - sps30:
+      - pm1:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - pm2_5:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - pm4:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - pm10:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - num_pm0_5:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - num_pm1:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - num_pm2_5:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - num_pm4:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - num_pm10:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+  - ble_tags:
+      - addr:
+      - rssi:
+      - voltage:
+          - $div: 100
+          - $fpp: 2
+      - temperature:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+      - humidity:
+          - measurements:
+              - $tsp:
+                  - min:
+                      - $div: 100
+                      - $fpp: 2
+                  - max:
+                      - $div: 100
+                      - $fpp: 2
+                  - avg:
+                      - $div: 100
+                      - $fpp: 2
+                  - mdn:
+                      - $div: 100
+                      - $fpp: 2
+  - tamper:
+      - state:
+          - $enum:
+              - "inactive"
+              - "active"
+      - events:
+          - $tso:
+              - type:
+                  - $enum:
+                      - "deactivated"
+                      - "activated"
+  - backup:
+      - line_voltage:
+          - $div: 1000
+          - $fpp: 2
+      - batt_voltage:
+          - $div: 1000
+          - $fpp: 2
+      - state:
+          - $enum:
+              - "disconnected"
+              - "connected"
+          - events:
+              - $tso:
+                  - type:
+                      - $enum:
+                          - "disconnected"
+                          - "connected"
+  - tc_thermometer:
+      - channel:
+      - measurements:
+          - $tsp:
+              - min:
+                  - $div: 100
+                  - $fpp: 2
+              - max:
+                  - $div: 100
+                  - $fpp: 2
+              - avg:
+                  - $div: 100
+                  - $fpp: 2
+              - mdn:
+                  - $div: 100
+                  - $fpp: 2
+  - radon_probe:
+      - concentration_hourly:
+          - measurements:
+              - $tsp:
+                  - value:
+      - concentration_daily:
+          - measurements:
+              - $tsp:
+                  - value:
+      - chamber_temperature:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
+      - chamber_humidity:
+          - measurements:
+              - $tsp:
+                  - min:
+                  - max:
+                  - avg:
+                  - mdn:
