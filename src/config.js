@@ -14,6 +14,7 @@ export default class Config {
     load(devicesPath) {
         try {
             const absoluteConfigPath = path.resolve(process.cwd(), devicesPath);
+            console.log(`[Config] Loading devices from: ${absoluteConfigPath}`);
             const devicesData = fs.readFileSync(absoluteConfigPath, 'utf8');
             const deviceList = JSON.parse(devicesData);
 

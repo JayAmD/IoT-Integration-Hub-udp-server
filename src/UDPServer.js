@@ -67,7 +67,7 @@ export default function UDPServer(port, host, config, onMessage) {
 
 
             const decodedData = {
-                time: Math.floor((new Date().getTime()) / 1000),
+                receivedAt: new Date().toISOString(),
                 port: port,
                 serialNumber: serialNumber,
                 flags: flags,

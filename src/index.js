@@ -1,17 +1,18 @@
-import UDPServer from './servers/UDPServer.js';
+import UDPServer from './UDPServer.js';
 import Config from './config.js';
+import { publishMessage } from './queue.js';
 
 // Configuration
 const UDP_PORT = process.env.UDP_PORT || 5002;
 const UDP_HOST = process.env.UDP_HOST || '127.0.0.1'; // '0.0.0.0' binds to all network interfaces
 
 // Initialize config explicitly with devices path and decoders folder
-const config = new Config('../config/devices.json', '../config/decoders/');
+const config = new Config('./config/devices.json', './config/decoders/');
 
 /**
  * Main callback to handle messages received by the UDP server.
  */
-function handleIncomingMessage(msg, rinfo) {
+async function handleIncomingMessage(msg, rinfo) {
     console.log(`[Main] Processing message from ${rinfo.address}:${rinfo.port} (SN: ${msg.serialNumber})`);
 
     try {
@@ -24,8 +25,21 @@ function handleIncomingMessage(msg, rinfo) {
         const decodedPayload = decodeFn(msg.raw);
         msg.data = decodedPayload;
         console.log(`[Main] Decoded data:`, JSON.stringify(msg.data, null, 2));
+
+        // 1. Prepare the record for RabbitMQ
+        const device = config.getDevice(msg.serialNumber);
+        const record = {
+            serialNumber: msg.serialNumber,
+            deviceId: device.id,
+            receivedAt: msg.receivedAt,
+            data: msg.data
+        };
+
+        // 2. Publish to RabbitMQ for reliable forwarding
+        await publishMessage(record);
+
     } catch (error) {
-        console.error(`[Main] Failed to decode payload:`, error.message);
+        console.error(`[Main] Failed to process message:`, error.message);
     }
 }
 
