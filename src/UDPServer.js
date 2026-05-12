@@ -1,7 +1,7 @@
 import dgram from 'dgram';
 import crypto from 'crypto';
 
-const HEADER_SIZE = 15; // 8 (hash) + 4 (SN) + 2 (Flags/Seq) + 1 (MsgType)
+const HEADER_SIZE = 15; // 8 (hash) + 4 (Serial Number) + 2 (Flags/Seq) + 1 (MsgType)
 
 /**
  * Starts the UDP server to listen for incoming NB-IoT messages.
@@ -41,7 +41,7 @@ export default function UDPServer(port, host, config, onMessage) {
             // 2. Fetch the claim token for this specific device
             const device = config.getDevice(serialNumber);
             if (!device) {
-                throw new Error(`Device with SN ${serialNumber} not found in devices.json!`);
+                throw new Error(`Device with Serial Number ${serialNumber} not found in devices.json!`);
             }
             
             const claimToken = Buffer.from(device.claimToken, 'hex');
@@ -60,7 +60,7 @@ export default function UDPServer(port, host, config, onMessage) {
 
             if (Buffer.compare(receivedHash, calculatedHash) !== 0) {
                 throw new Error('Security signature hash does not match!');
-                console.warn(`[UDP] Hash mismatch for SN: ${serialNumber} (Expected if using dummy claim token)`);
+                console.warn(`[UDP] Hash mismatch for Serial Number: ${serialNumber} (Expected if using dummy claim token)`);
             }
 
             // 4. Optionally switch by message type (0x06 is UL_UPLOAD_DATA)

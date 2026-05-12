@@ -1,49 +1,55 @@
 import UDPServer from './UDPServer.js';
-import Config from './config.js';
-import { publishMessage } from './queue.js';
+import DeviceRegistry from './registry.js';
+import { fetchLatestConfig, initializeSyncService } from './sync.js';
+import { readJson } from './storage.js';
+import { handleIncomingMessage } from './processor.js';
+import { UDP_HOST, UDP_PORT } from '../config/env.js';
 
-// Configuration
-const UDP_PORT = process.env.UDP_PORT || 5002;
-const UDP_HOST = process.env.UDP_HOST || '127.0.0.1'; // '0.0.0.0' binds to all network interfaces
-
-// Initialize config explicitly with devices path and decoders folder
-const config = new Config('./config/devices.json', './config/decoders/');
+const DEVICES_FILE = './config/devices.json';
 
 /**
- * Main callback to handle messages received by the UDP server.
+ * Orchestrates the bootstrapping of the UDP Parser Server.
  */
-async function handleIncomingMessage(msg, rinfo) {
-    console.log(`[Main] Processing message from ${rinfo.address}:${rinfo.port} (SN: ${msg.serialNumber})`);
+async function bootstrap() {
+    console.log(`
+=========================================
+   IoT Integration Hub - UDP Parser
+=========================================
+[Main] Booting services...`);
 
-    try {
-        const decodeFn = config.getDecoder(msg.serialNumber);
-        //TODO see what is the purpose of the decode function, and the other functions instead of class
-        if (!decodeFn) {
-            throw new Error(`Decoder for SN ${msg.serialNumber} not found/loaded.`);
-        }
+    // 1. Initialize Registry & Load local cache
+    const registry = new DeviceRegistry();
+    const localDevices = await readJson(DEVICES_FILE);
 
-        const decodedPayload = decodeFn(msg.raw);
-        msg.data = decodedPayload;
-        console.log(`[Main] Decoded data:`, JSON.stringify(msg.data, null, 2));
-
-        // 1. Prepare the record for RabbitMQ
-        const device = config.getDevice(msg.serialNumber);
-        const record = {
-            serialNumber: msg.serialNumber,
-            deviceId: device.id,
-            receivedAt: msg.receivedAt,
-            data: msg.data
-        };
-
-        // 2. Publish to RabbitMQ for reliable forwarding
-        await publishMessage(record);
-
-    } catch (error) {
-        console.error(`[Main] Failed to process message:`, error.message);
+    if (localDevices) {
+        console.log(`[Main] Cache: Loaded ${localDevices.length} devices from disk.`);
+        registry.update(localDevices);
     }
+
+    // 2. Initial Sync
+    // Ensures we have fresh data from Main App before handling any packets
+    await fetchLatestConfig(registry);
+
+    // 3. Real-time Sync
+    // Start RabbitMQ listener for dynamic updates
+    await initializeSyncService(registry);
+
+    // 4. UDP Listener
+    const udpPort = Number(UDP_PORT) || 5002;
+    const udpHost = UDP_HOST || "127.0.0.1";
+
+    UDPServer(udpPort, udpHost, registry, (msg, rinfo) =>
+        handleIncomingMessage(msg, rinfo, registry)
+    );
 }
 
-// Start the UDP Server
-console.log(`Starting UDP Parser Server...`);
+// Global Error Handler
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[Main] Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
-UDPServer(UDP_PORT, UDP_HOST, config, handleIncomingMessage);
+// Kickoff
+bootstrap().catch(err => {
+    console.error('[Main] CRITICAL BOOT ERROR:', err);
+    process.exit(1);
+});
