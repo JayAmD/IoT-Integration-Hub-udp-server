@@ -1,5 +1,5 @@
 import path from 'path';
-import { newDecoderFromFile } from '../core/binary.parser.js';
+import { newDecoderFromFile } from '../core/decoder.js';
 
 /**
  * Manages device metadata and pre-initialized decoder functions.
@@ -15,17 +15,9 @@ export default class DeviceRegistry {
      * Updates the internal registry with a new list of devices.
      * Efficiently reloads only necessary decoders.
      */
-    update(configInput) {
-        let deviceList = [];
-        let updatedAt = null;
-
-        if (Array.isArray(configInput)) {
-            deviceList = configInput;
-        } else if (configInput && Array.isArray(configInput.devices)) {
-            deviceList = configInput.devices;
-            updatedAt = configInput.updatedAt;
-        } else {
-            throw new Error('[Registry] Invalid configuration input provided.');
+    update(deviceList) {
+        if (!Array.isArray(deviceList)) {
+            throw new Error('[Registry] Invalid device list provided.');
         }
 
         const newDevices = new Map();
@@ -40,8 +32,7 @@ export default class DeviceRegistry {
         });
 
         this.devices = newDevices;
-        const timeLog = updatedAt ? ` (Synced at: ${updatedAt})` : '';
-        console.log(`[Registry] Updated with ${this.devices.size} devices${timeLog}.`);
+        console.log(`[Registry] Updated with ${this.devices.size} devices.`);
     }
 
     /**
