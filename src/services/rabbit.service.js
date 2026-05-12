@@ -1,5 +1,5 @@
 import amqp from 'amqplib';
-import { RABBIT_URL } from '../config/env.js';
+import { RABBIT_URL } from '../../config/env.js';
 
 let connection = null;
 let channel = null;
@@ -32,7 +32,7 @@ export const getRabbitChannel = async () => {
         channel = await connection.createChannel();
         
         // Ensure default IoT messages queue exists
-        const IOT_MSGS_QUEUE = 'udp_parser_server_iot_msgs_queue';
+        const IOT_MSGS_QUEUE = 'iot.telemetry.normalized';
         await channel.assertQueue(IOT_MSGS_QUEUE, { durable: true });
 
         console.log(`[Rabbit] Channel initialized.`);

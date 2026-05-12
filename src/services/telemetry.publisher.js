@@ -1,6 +1,6 @@
-import { getRabbitChannel } from './rabbit.js';
+import { getRabbitChannel } from './rabbit.service.js';
 
-const QUEUE_NAME = 'udp_parser_server_iot_msgs_queue';
+const QUEUE_NAME = 'iot.telemetry.normalized';
 
 /**
  * Publishes a processed IoT message to the backend queue.

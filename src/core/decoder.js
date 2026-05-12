@@ -2,6 +2,43 @@ import fs from 'fs';
 import yaml from 'yaml';
 import cbor from 'cbor';
 
+/**
+ * The Decoder class encapsulates the logic for parsing binary payloads
+ * based on a YAML schema (codec).
+ */
+export class Decoder {
+  constructor(text) {
+    const codec = yaml.parse(text);
+    this.attributes = flattenAttributes(codec.schema);
+  }
+
+  /**
+   * Decodes a binary buffer into a human-readable JSON object.
+   */
+  decode(hexbuf) {
+    const decoded = cbor.decodeAllSync(hexbuf);
+    if (!decoded || decoded.length === 0) return null;
+    return unrol(decoded[0], this.attributes);
+  }
+}
+
+/**
+ * Factory function to create a new Decoder instance from raw text.
+ */
+export function newDecoder(text) {
+  return new Decoder(text);
+}
+
+/**
+ * Factory function to create a new Decoder instance from a YAML file.
+ */
+export function newDecoderFromFile(filename) {
+  const text = fs.readFileSync(filename).toString('utf8');
+  return newDecoder(text);
+}
+
+// --- Internal Helper Functions (Mapping & Transformation) ---
+
 function flattenAttributes(codecSchema) {
   const attributes = [];
 
@@ -136,7 +173,7 @@ function unrol(decoded, attributes) {
           }
           result[attribute.key] = points;
         } else {
-            result[attribute.key] = value.map((item) => unrol(item, attributes));
+          result[attribute.key] = value.map((item) => unrol(item, attributes));
         }
 
       } else {
@@ -151,20 +188,4 @@ function unrol(decoded, attributes) {
     }
   });
   return result;
-}
-
-export function createDecoder(text) {
-  const codec = yaml.parse(text);
-  const attributes = flattenAttributes(codec.schema || codec);
-
-  return function decode(hexbuf) {
-    const decoded = cbor.decodeAllSync(hexbuf);
-    if (!decoded || decoded.length === 0) return null;
-    return unrol(decoded[0], attributes);
-  };
-}
-
-export function createDecoderFromFile(filename) {
-  const text = fs.readFileSync(filename).toString('utf8');
-  return createDecoder(text);
 }

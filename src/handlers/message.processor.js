@@ -1,4 +1,4 @@
-import { publishMessage } from './queue.js';
+import { publishMessage } from '../services/telemetry.publisher.js';
 
 /**
  * Orchestrates the processing of IoT messages received via UDP.
@@ -9,23 +9,23 @@ export async function handleIncomingMessage(msg, rinfo, registry) {
     console.log(`[Processor] Processing packet from SN ${serialNumber} (${rinfo.address})`);
 
     try {
-        // 1. Resolve Decoder Logic
-        const decodeFn = registry.getDecoder(serialNumber);
-        if (!decodeFn) {
-            throw new Error(`No decoder found for Serial Number ${serialNumber}`);
+        // 1. Get decoder logic from registry
+        const decoder = registry.getDecoder(serialNumber);
+        if (!decoder) {
+            throw new Error(`Decoder instance not found for SN ${serialNumber}`);
         }
 
         // 2. Decode the binary payload
-        const decodedPayload = decodeFn(msg.raw);
+        const decodedPayload = decoder.decode(msg.raw);
         msg.data = decodedPayload;
-        
+
         console.log(`[Processor] Decoded payload:`, JSON.stringify(msg.data));
 
         // 3. Resolve Device Identity
         const device = registry.getDevice(serialNumber);
         const record = {
             serialNumber: Number(serialNumber),
-            deviceId: device?.id, // May be undefined if device is unknown but we still forward
+            deviceId: device.id,
             receivedAt: msg.receivedAt,
             data: msg.data
         };

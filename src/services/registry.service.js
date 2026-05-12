@@ -1,11 +1,11 @@
 import path from 'path';
-import { createDecoderFromFile } from './decoder.js';
+import { newDecoderFromFile } from '../core/binary.parser.js';
 
 /**
  * Manages device metadata and pre-initialized decoder functions.
  */
 export default class DeviceRegistry {
-    constructor(decodersDir = './config/decoders/') {
+    constructor(decodersDir = './decoders/') {
         this.devices = new Map(); // serialNumber (Number) -> device metadata
         this.decoders = new Map(); // filename -> pre-initialized decoder function
         this.decodersDir = decodersDir;
@@ -15,9 +15,17 @@ export default class DeviceRegistry {
      * Updates the internal registry with a new list of devices.
      * Efficiently reloads only necessary decoders.
      */
-    update(deviceList) {
-        if (!Array.isArray(deviceList)) {
-            throw new Error('[Registry] Invalid device list provided.');
+    update(configInput) {
+        let deviceList = [];
+        let updatedAt = null;
+
+        if (Array.isArray(configInput)) {
+            deviceList = configInput;
+        } else if (configInput && Array.isArray(configInput.devices)) {
+            deviceList = configInput.devices;
+            updatedAt = configInput.updatedAt;
+        } else {
+            throw new Error('[Registry] Invalid configuration input provided.');
         }
 
         const newDevices = new Map();
@@ -32,7 +40,8 @@ export default class DeviceRegistry {
         });
 
         this.devices = newDevices;
-        console.log(`[Registry] Updated with ${this.devices.size} devices.`);
+        const timeLog = updatedAt ? ` (Synced at: ${updatedAt})` : '';
+        console.log(`[Registry] Updated with ${this.devices.size} devices${timeLog}.`);
     }
 
     /**
@@ -54,8 +63,8 @@ export default class DeviceRegistry {
     _loadDecoder(filename) {
         const decoderPath = path.resolve(process.cwd(), this.decodersDir, filename);
         try {
-            const decodeFn = createDecoderFromFile(decoderPath);
-            this.decoders.set(filename, decodeFn);
+            const decoder = newDecoderFromFile(decoderPath);
+            this.decoders.set(filename, decoder);
             console.log(`[Registry] Loaded decoder logic: ${filename}`);
         } catch (err) {
             console.error(`[Registry] Failed to load decoder "${filename}":`, err.message);

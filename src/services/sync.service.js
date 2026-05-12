@@ -1,22 +1,19 @@
-import { getRabbitChannel } from './rabbit.js';
+import { getRabbitChannel } from './rabbit.service.js';
 import { 
     MAIN_APP_CONFIG_URL, 
     UDP_SERVER_TO_MAIN_APP_API_KEY 
-} from '../config/env.js';
-import { saveJsonAtomic } from './storage.js';
+} from '../../config/env.js';
 
 const NOTIFY_EXCHANGE = 'udp_config_notify_exchange';
 const REFRESH_DEBOUNCE_MS = 1000;
-const DEVICES_FILE = './config/devices.json';
 
 let refreshTimer = null;
 
 /**
  * Pulls the full device configuration snapshot from the Main App.
+ * Now a "Pure" fetcher: it just returns the data without side-effects.
  */
-export const fetchLatestConfig = async (registry) => {
-    console.log(`[Sync] Synchronizing with Main App...`);
-    
+export const fetchLatestConfig = async () => {
     try {
         const response = await fetch(MAIN_APP_CONFIG_URL, {
             headers: {
@@ -31,26 +28,24 @@ export const fetchLatestConfig = async (registry) => {
 
         const body = await response.json();
         
-        if (!body.success || !body.data?.devices) {
+        if (!body.success || !body.data) {
             throw new Error('Malformed API response.');
         }
 
-        const devices = body.data.devices;
-        
-        // Update in-memory registry and local cache
-        registry.update(devices);
-        await saveJsonAtomic(DEVICES_FILE, devices);
-        
-        console.log(`[Sync] Config synchronized (${devices.length} devices).`);
+        return body.data; // Return the full { updatedAt, devices } object
     } catch (error) {
-        console.error(`[Sync] Pull failed (using local cache):`, error.message);
+        console.error(`[Sync] API Pull failed:`, error.message);
+        return null;
     }
 };
 
 /**
  * Initializes the background listener for configuration change events.
+ * Now follows the Observer pattern: it notifies a callback when data changes.
+ * 
+ * @param {Function} onUpdate - Callback function(configData)
  */
-export const initializeSyncService = async (registry) => {
+export const initializeSyncService = async (onUpdate) => {
     try {
         const channel = await getRabbitChannel();
 
@@ -61,23 +56,26 @@ export const initializeSyncService = async (registry) => {
         const { queue } = await channel.assertQueue('', { exclusive: true });
         await channel.bindQueue(queue, NOTIFY_EXCHANGE, '');
 
-        console.log(`[Sync] Real-time updates enabled.`);
+        console.log(`[Sync] Real-time updates active.`);
 
         channel.consume(queue, (msg) => {
             if (!msg) return;
 
-            console.log(`[Sync] Notification received, scheduling refresh...`);
+            console.log(`[Sync] Remote change notification received...`);
             
             // Debounce logic: wait for burst to end before pulling
             if (refreshTimer) clearTimeout(refreshTimer);
-            refreshTimer = setTimeout(() => {
-                fetchLatestConfig(registry);
+            refreshTimer = setTimeout(async () => {
+                const configData = await fetchLatestConfig();
+                if (configData && onUpdate) {
+                    onUpdate(configData);
+                }
             }, REFRESH_DEBOUNCE_MS);
 
             channel.ack(msg);
         });
 
     } catch (error) {
-        console.error(`[Sync] Real-time updates unavailable:`, error.message);
+        console.error(`[Sync] Real-time updates disabled:`, error.message);
     }
 };
