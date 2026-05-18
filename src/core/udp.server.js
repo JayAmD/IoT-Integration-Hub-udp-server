@@ -7,11 +7,11 @@ const HEADER_SIZE = 15; // 8 (hash) + 4 (Serial Number) + 2 (Flags/Seq) + 1 (Msg
  * Starts the UDP server to listen for incoming NB-IoT messages.
  * @param {number} port - The port to listen on.
  * @param {string} host - The address to bind to (e.g., '0.0.0.0' or '127.0.0.1').
- * @param {object} config - The initialized config instance.
+ * @param {object} registry - The initialized registry instance.
  * @param {function} onMessage - Callback function to handle incoming messages.
  * @returns {dgram.Socket} The UDP server instance.
  */
-export default function UDPServer(port, host, config, onMessage) {
+export default function UDPServer(port, host, registry, onMessage) {
     const server = dgram.createSocket('udp4');
 
     server.on('error', (err) => {
@@ -39,11 +39,11 @@ export default function UDPServer(port, host, config, onMessage) {
             const raw = msg.slice(HEADER_SIZE); // The CBOR payload
 
             // 2. Fetch the claim token for this specific device
-            const device = config.getDevice(serialNumber);
+            const device = registry.getDevice(serialNumber);
             if (!device) {
                 throw new Error(`Device with Serial Number ${serialNumber} not found in devices.json!`);
             }
-            
+
             const claimToken = Buffer.from(device.claimToken, 'hex');
 
             // 3. Verify the Security Signature (SHA-256 XOR truncated)
@@ -60,7 +60,6 @@ export default function UDPServer(port, host, config, onMessage) {
 
             if (Buffer.compare(receivedHash, calculatedHash) !== 0) {
                 throw new Error('Security signature hash does not match!');
-                console.warn(`[UDP] Hash mismatch for Serial Number: ${serialNumber} (Expected if using dummy claim token)`);
             }
 
             // 4. Optionally switch by message type (0x06 is UL_UPLOAD_DATA)
@@ -70,6 +69,7 @@ export default function UDPServer(port, host, config, onMessage) {
                 receivedAt: new Date().toISOString(),
                 port: port,
                 serialNumber: serialNumber,
+                deviceId: device.id,
                 flags: flags,
                 sequence: sequence,
                 messageType: messageType,

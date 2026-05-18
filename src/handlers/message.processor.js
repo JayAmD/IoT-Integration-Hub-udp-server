@@ -21,11 +21,10 @@ export async function handleIncomingMessage(msg, rinfo, registry) {
 
         console.log(`[Processor] Decoded payload:`, JSON.stringify(msg.data));
 
-        // 3. Resolve Device Identity
-        const device = registry.getDevice(serialNumber);
+        // 3. Prepare Telemetry Record
         const record = {
             serialNumber: Number(serialNumber),
-            deviceId: device.id,
+            deviceId: msg.deviceId,
             receivedAt: msg.receivedAt,
             data: msg.data
         };

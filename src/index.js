@@ -47,9 +47,11 @@ async function bootstrap() {
     const udpPort = Number(UDP_PORT) || 5002;
     const udpHost = UDP_HOST || "127.0.0.1";
 
-    UDPServer(udpPort, udpHost, registry, (msg, rinfo) =>
-        handleIncomingMessage(msg, rinfo, registry)
-    );
+    const onUdpMessageReceived = (msg, rinfo) => {
+        handleIncomingMessage(msg, rinfo, registry);
+    };
+
+    UDPServer(udpPort, udpHost, registry, onUdpMessageReceived);
 
     // 3. Setup Background Synchronization (Observer Pattern)
     // When the SyncService finds new data, it notifies this orchestrator
