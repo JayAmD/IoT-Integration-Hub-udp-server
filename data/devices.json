@@ -1,8 +1,26 @@
 {
-  "updatedAt": "2026-05-12T19:16:00Z",
+  "updatedAt": "2026-05-26T17:00:21.158Z",
   "devices": [
     {
-      "id": "6638f8f237890b0266000000",
+      "id": "69fce99b1d519192b62345c3",
+      "serialNumber": 700001,
+      "claimToken": "ssdsadadfdfsdvdsvdsv",
+      "decoder": "clime-decoder.yaml"
+    },
+    {
+      "id": "69fcea8ccc0f6b2e942f4894",
+      "serialNumber": 700002,
+      "claimToken": "seed-claim-token",
+      "decoder": "clime-decoder.yaml"
+    },
+    {
+      "id": "6a00a5b693585e611e124578",
+      "serialNumber": 54894554621,
+      "claimToken": "siajdklsaklcndsdas84sa54dsad12ad31",
+      "decoder": "clime-decoder.yaml"
+    },
+    {
+      "id": "6a1033e53fc06b101232f549",
       "serialNumber": 2159019302,
       "claimToken": "86ccef19c527194f67008a5c24579115",
       "decoder": "clime-decoder.yaml"

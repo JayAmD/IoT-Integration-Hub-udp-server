@@ -30,7 +30,7 @@ export const getRabbitChannel = async () => {
         }
 
         channel = await connection.createChannel();
-        
+
         // Ensure default IoT messages queue exists
         const IOT_MSGS_QUEUE = 'iot.telemetry.normalized';
         await channel.assertQueue(IOT_MSGS_QUEUE, { durable: true });
@@ -38,7 +38,7 @@ export const getRabbitChannel = async () => {
         console.log(`[Rabbit] Channel initialized.`);
         return channel;
     } catch (error) {
-        console.error("[Rabbit] Failed to initialize RabbitMQ:", error.message);
+        console.error("[Rabbit] Failed to initialize RabbitMQ:", error.message || error);
         throw error;
     }
 };
