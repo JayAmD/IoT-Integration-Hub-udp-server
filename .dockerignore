@@ -13,3 +13,6 @@ npm-debug.log
 
 Dockerfile
 .dockerignore
+
+data/devices.json
+data/devices.json.tmp
