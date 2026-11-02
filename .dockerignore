@@ -5,6 +5,8 @@ npm-debug.log
 .vscode/
 
 .env*.local
+.env
+.env.*
 .git/
 .github/
 .gitignore
