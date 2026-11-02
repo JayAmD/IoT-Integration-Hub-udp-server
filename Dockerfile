@@ -19,6 +19,7 @@ COPY --from=production-dependencies-env /app/node_modules ./node_modules
 
 # Copy source code and files
 COPY . .
+RUN mkdir -p /app/data
 
 # Expose the UDP port (specifically as UDP)
 EXPOSE 5002/udp
